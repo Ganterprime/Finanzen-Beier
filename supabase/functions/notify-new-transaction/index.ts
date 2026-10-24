@@ -39,10 +39,11 @@ async function sendToUsers(userIds: string[], msg: Message) {
   const errors: string[] = [];
 
   // Web-Push (Browser / Startbildschirm-App)
-  const { data: subs } = await supabase
+  const { data: subs, error: subsError } = await supabase
     .from('web_push_subscriptions')
     .select('endpoint, subscription')
     .in('user_id', userIds);
+  if (subsError) throw new Error(`Geräte laden: ${subsError.message}`);
   let web = 0;
   await Promise.all(
     (subs ?? []).map(async ({ endpoint, subscription }) => {
