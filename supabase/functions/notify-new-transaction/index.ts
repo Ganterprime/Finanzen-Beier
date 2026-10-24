@@ -47,7 +47,11 @@ async function sendToUsers(userIds: string[], msg: Message) {
   await Promise.all(
     (subs ?? []).map(async ({ endpoint, subscription }) => {
       try {
-        await webpush.sendNotification(subscription, JSON.stringify({ ...msg, url: '/' }));
+        const res = await webpush.sendNotification(subscription, JSON.stringify({ ...msg, url: '/' }), {
+          TTL: 60 * 60 * 24,
+          urgency: 'high',
+        });
+        console.log('Web-Push zugestellt', new URL(endpoint).host, res.statusCode);
         web++;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;

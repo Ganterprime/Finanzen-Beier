@@ -73,9 +73,10 @@ export async function enableWebPush(): Promise<WebPushStatus> {
   return 'granted';
 }
 
-export async function sendTestPush() {
-  const { error } = await supabase.functions.invoke('notify-new-transaction', { body: { test: true } });
-  if (!error) return;
+/** Gibt die Anzahl der erreichten Geräte zurück. */
+export async function sendTestPush(): Promise<number | null> {
+  const { data, error } = await supabase.functions.invoke('notify-new-transaction', { body: { test: true } });
+  if (!error) return typeof data?.web === 'number' ? data.web : null;
   // Fehlertext der Funktion anzeigen statt der allgemeinen Meldung
   const context = (error as { context?: Response }).context;
   const detail = await context?.json?.().catch(() => null);

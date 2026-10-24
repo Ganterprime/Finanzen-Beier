@@ -154,7 +154,7 @@ export default function Settings() {
               variant="secondary"
               onPress={() =>
                 sendTestPush()
-                  .then(() => setMessage('Testnachricht verschickt.'))
+                  .then((n) => setMessage(n == null ? 'Testnachricht verschickt.' : `Testnachricht an ${n} Gerät(e) verschickt.`))
                   .catch((e) => setMessage(`Test fehlgeschlagen: ${(e as Error).message}`))
               }
             />
