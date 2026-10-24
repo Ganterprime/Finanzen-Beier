@@ -75,5 +75,9 @@ export async function enableWebPush(): Promise<WebPushStatus> {
 
 export async function sendTestPush() {
   const { error } = await supabase.functions.invoke('notify-new-transaction', { body: { test: true } });
-  if (error) throw error;
+  if (!error) return;
+  // Fehlertext der Funktion anzeigen statt der allgemeinen Meldung
+  const context = (error as { context?: Response }).context;
+  const detail = await context?.json?.().catch(() => null);
+  throw new Error(detail?.error ?? error.message);
 }

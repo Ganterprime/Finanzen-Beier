@@ -12,11 +12,15 @@ import webpush from 'npm:web-push@3.6.7';
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
-webpush.setVapidDetails(
-  'mailto:finanzen-beier@example.com',
-  Deno.env.get('VAPID_PUBLIC_KEY')!,
-  Deno.env.get('VAPID_PRIVATE_KEY')!,
-);
+// Schlüssel erst bei Bedarf setzen, damit ein Tippfehler in den Secrets eine lesbare
+// Fehlermeldung ergibt statt eines Absturzes beim Start.
+let vapidReady = false;
+function setupVapid() {
+  if (vapidReady) return;
+  const clean = (name: string) => (Deno.env.get(name) ?? '').trim().replace(/^[`'"]+|[`'"]+$/g, '');
+  webpush.setVapidDetails('mailto:finanzen-beier@example.com', clean('VAPID_PUBLIC_KEY'), clean('VAPID_PRIVATE_KEY'));
+  vapidReady = true;
+}
 
 interface Message {
   title: string;
@@ -29,7 +33,9 @@ const cors = {
 };
 
 async function sendToUsers(userIds: string[], msg: Message) {
-  if (!userIds.length) return { web: 0, expo: 0 };
+  if (!userIds.length) return { web: 0, expo: 0, errors: [] as string[] };
+  setupVapid();
+  const errors: string[] = [];
 
   // Web-Push (Browser / Startbildschirm-App)
   const { data: subs } = await supabase
@@ -48,6 +54,7 @@ async function sendToUsers(userIds: string[], msg: Message) {
           await supabase.from('web_push_subscriptions').delete().eq('endpoint', endpoint);
         } else {
           console.error('Web-Push fehlgeschlagen', status, e);
+          errors.push(`${status ?? ''} ${(e as { body?: string }).body ?? (e as Error).message}`.trim());
         }
       }
     }),
@@ -62,13 +69,23 @@ async function sendToUsers(userIds: string[], msg: Message) {
       body: JSON.stringify(tokens.map(({ token }) => ({ to: token, ...msg, channelId: 'buchungen', sound: 'default' }))),
     });
   }
-  return { web, expo: tokens?.length ?? 0 };
+  return { web, expo: tokens?.length ?? 0, errors };
 }
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+  try {
+    return await handle(req);
+  } catch (e) {
+    console.error(e);
+    return json({ error: (e as Error).message }, 500);
+  }
+});
+
+async function handle(req: Request): Promise<Response> {
 
   const payload = await req.json().catch(() => ({}));
 
@@ -80,6 +97,9 @@ Deno.serve(async (req) => {
       title: 'Finanzen Beier',
       body: 'Benachrichtigungen funktionieren 🎉',
     });
+    if (result.web === 0) {
+      return json({ error: result.errors[0] ?? 'Kein Gerät mit aktivierten Benachrichtigungen gefunden', ...result }, 500);
+    }
     return json(result);
   }
 
@@ -110,4 +130,4 @@ Deno.serve(async (req) => {
     body,
   });
   return json(result);
-});
+}
