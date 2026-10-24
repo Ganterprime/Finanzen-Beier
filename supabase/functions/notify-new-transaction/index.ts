@@ -18,7 +18,8 @@ let vapidReady = false;
 function setupVapid() {
   if (vapidReady) return;
   const clean = (name: string) => (Deno.env.get(name) ?? '').trim().replace(/^[`'"]+|[`'"]+$/g, '');
-  webpush.setVapidDetails('mailto:finanzen-beier@example.com', clean('VAPID_PUBLIC_KEY'), clean('VAPID_PRIVATE_KEY'));
+  // Apple lehnt Absender mit Platzhalter-Adressen ab, daher die echte App-Adresse.
+  webpush.setVapidDetails('https://finanzen-beier.vercel.app', clean('VAPID_PUBLIC_KEY'), clean('VAPID_PRIVATE_KEY'));
   vapidReady = true;
 }
 
