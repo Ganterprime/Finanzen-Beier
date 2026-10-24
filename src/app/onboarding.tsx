@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Body, Button, Card, Field, Muted, Screen, Title } from '@/components/ui';
+import { signOut } from '@/lib/offline';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 import { useHousehold } from '@/providers/HouseholdProvider';
@@ -69,7 +70,7 @@ export default function Onboarding() {
       </Card>
 
       {(error || loadError) && <Body style={{ color: t.expense }}>{error ?? `Laden fehlgeschlagen: ${loadError}`}</Body>}
-      <Button label="Abmelden" variant="secondary" onPress={() => supabase.auth.signOut()} />
+      <Button label="Abmelden" variant="secondary" onPress={signOut} />
     </Screen>
   );
 }

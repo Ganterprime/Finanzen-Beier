@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { Body, Button, Card, Field, Muted, Screen, Title } from '@/components/ui';
 import { formatDate } from '@/lib/format';
+import { signOut } from '@/lib/offline';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 import { enableWebPush, sendTestPush, webPushStatus, type WebPushStatus } from '@/lib/webPush';
@@ -196,7 +197,7 @@ export default function Settings() {
       {message && <Muted>{message}</Muted>}
 
       <Button label="Kategorien verwalten" variant="secondary" onPress={() => router.push('/kategorien')} />
-      <Button label="Abmelden" variant="secondary" onPress={() => supabase.auth.signOut()} />
+      <Button label="Abmelden" variant="secondary" onPress={signOut} />
       <Muted>Angemeldet als {session?.user.email}</Muted>
     </Screen>
   );
