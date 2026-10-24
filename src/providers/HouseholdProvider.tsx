@@ -6,6 +6,8 @@ import { useSession } from './SessionProvider';
 
 interface HouseholdState {
   loading: boolean;
+  /** Fehler beim Laden, z. B. fehlende Datenbank-Rechte */
+  error: string | null;
   household: Household | null;
   members: Member[];
   categories: Category[];
@@ -27,6 +29,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   const userId = session?.user.id;
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [household, setHousehold] = useState<Household | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,13 +54,14 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     }
     setLoading(true);
     // Vorerst ein Haushalt pro Nutzer; später Umschalter zwischen mehreren.
-    const { data: own } = await supabase
+    const { data: own, error: loadError } = await supabase
       .from('household_members')
       .select('household_id, households(id, name, currency)')
       .eq('user_id', userId)
       .order('joined_at')
       .limit(1)
       .maybeSingle();
+    setError(loadError?.message ?? null);
     const hh = (own?.households as unknown as Household | null) ?? null;
     setHousehold(hh);
     if (hh) {
@@ -97,6 +101,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   const value = useMemo<HouseholdState>(
     () => ({
       loading,
+      error,
       household,
       members,
       categories,
@@ -109,7 +114,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
         id == null ? 'Gemeinsam' : members.find((m) => m.user_id === id)?.display_name ?? 'Unbekannt',
       category: (id) => categories.find((c) => c.id === id),
     }),
-    [loading, household, members, categories, scope, period, reload],
+    [loading, error, household, members, categories, scope, period, reload],
   );
 
   return <HouseholdContext.Provider value={value}>{children}</HouseholdContext.Provider>;

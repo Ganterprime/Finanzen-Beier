@@ -12,7 +12,7 @@ interface Invitation {
 
 export default function Onboarding() {
   const t = useTheme();
-  const { reload } = useHousehold();
+  const { reload, error: loadError } = useHousehold();
   const [name, setName] = useState('');
   const [householdName, setHouseholdName] = useState('Beier / Beier-Kiray');
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -68,7 +68,7 @@ export default function Onboarding() {
         />
       </Card>
 
-      {error && <Body style={{ color: t.expense }}>{error}</Body>}
+      {(error || loadError) && <Body style={{ color: t.expense }}>{error ?? `Laden fehlgeschlagen: ${loadError}`}</Body>}
       <Button label="Abmelden" variant="secondary" onPress={() => supabase.auth.signOut()} />
     </Screen>
   );
