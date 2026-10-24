@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AddButton } from '@/components/AddButton';
+import { BudgetRow } from '@/components/BudgetRow';
 import { CategoryBars } from '@/components/CategoryBars';
 import { FilterBar } from '@/components/FilterBar';
 import { TransactionRow } from '@/components/TransactionRow';
@@ -9,6 +10,7 @@ import { GoalRow } from '@/components/GoalRow';
 import { Button, Card, Muted, Screen, Title } from '@/components/ui';
 import { formatEuro } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
+import { budgetUsage, useBudgets } from '@/lib/useBudgets';
 import { useSavingsGoals } from '@/lib/useSavingsGoals';
 import { availablePerPerson, byScope, sumByCategory, totals, useTransactions } from '@/lib/useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
@@ -19,6 +21,13 @@ export default function Overview() {
   const { items } = useTransactions(period);
   const { goals } = useSavingsGoals();
   const activeGoals = goals.filter((g) => !g.archived);
+  const { budgets } = useBudgets();
+  const usage = budgetUsage(
+    budgets,
+    items,
+    members.map((m) => m.user_id),
+    period,
+  ).filter((b) => scope === 'alle' || b.person_id === scope || b.person_id == null);
   const available = availablePerPerson(
     items,
     members.map((m) => m.user_id),
@@ -69,6 +78,19 @@ export default function Overview() {
             ))}
           </Card>
         )}
+
+        <Card style={{ gap: 16 }}>
+          <Title>Budgets</Title>
+          {usage.length === 0 && <Muted>Lege fest, wie viel jeder z. B. für Freizeit ausgeben darf.</Muted>}
+          {usage.slice(0, 4).map((b) => (
+            <BudgetRow key={b.id} budget={b} />
+          ))}
+          <Button
+            label={usage.length ? 'Alle Budgets' : 'Budget anlegen'}
+            variant="secondary"
+            onPress={() => router.push(usage.length ? '/budgets' : '/budget-form')}
+          />
+        </Card>
 
         <Card style={{ gap: 16 }}>
           <Title>Sparziele</Title>

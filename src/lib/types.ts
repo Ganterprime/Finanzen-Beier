@@ -81,3 +81,16 @@ export interface Period {
   year: number;
   month: number | null;
 }
+
+export interface Budget {
+  id: string;
+  household_id: string;
+  name: string;
+  icon: string;
+  /** leer = alle Ausgaben */
+  category_ids: string[];
+  /** null = gemeinsam */
+  person_id: string | null;
+  /** Limit pro Monat */
+  amount_cents: number;
+}

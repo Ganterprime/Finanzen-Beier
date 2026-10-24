@@ -9,14 +9,15 @@ export function CategoryGrid({
   onSelect,
 }: {
   categories: Category[];
-  selected: string | null;
+  /** eine Kategorie oder mehrere (Mehrfachauswahl) */
+  selected: string | null | string[];
   onSelect: (id: string) => void;
 }) {
   const t = useTheme();
   return (
     <View style={styles.grid}>
       {categories.map((c) => {
-        const active = c.id === selected;
+        const active = Array.isArray(selected) ? selected.includes(c.id) : c.id === selected;
         return (
           <Pressable
             key={c.id}
