@@ -1,6 +1,7 @@
 -- Push-Benachrichtigungen über die Web-App (Android und iPhone ab iOS 16.4)
+-- Darf gefahrlos mehrfach ausgeführt werden.
 
-create table public.web_push_subscriptions (
+create table if not exists public.web_push_subscriptions (
   endpoint      text primary key,
   user_id       uuid not null default auth.uid() references auth.users on delete cascade,
   subscription  jsonb not null,
@@ -8,6 +9,7 @@ create table public.web_push_subscriptions (
 );
 
 alter table public.web_push_subscriptions enable row level security;
+drop policy if exists "Eigene Web-Push-Abos" on public.web_push_subscriptions;
 create policy "Eigene Web-Push-Abos" on public.web_push_subscriptions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 grant select, delete on public.web_push_subscriptions to authenticated;
@@ -49,6 +51,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_notify on public.transactions;
 create trigger transactions_notify
   after insert on public.transactions
   for each row execute function public.notify_new_transaction();
