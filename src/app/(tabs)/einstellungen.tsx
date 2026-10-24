@@ -6,6 +6,7 @@ import { Body, Button, Card, Field, Muted, Screen, Title } from '@/components/ui
 import { formatDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
+import { enableWebPush, sendTestPush, webPushStatus, type WebPushStatus } from '@/lib/webPush';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { useSession } from '@/providers/SessionProvider';
 
@@ -27,6 +28,8 @@ export default function Settings() {
   const [email, setEmail] = useState('');
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [push, setPush] = useState<WebPushStatus>(webPushStatus());
+  const [pushBusy, setPushBusy] = useState(false);
 
   const loadInvitations = useCallback(async () => {
     if (!isOwner || !household) return;
@@ -107,6 +110,55 @@ export default function Settings() {
               </Pressable>
             </View>
           ))}
+        </Card>
+      )}
+
+      {push !== 'unsupported' && (
+        <Card>
+          <Title>Benachrichtigungen</Title>
+          {push === 'needs-homescreen' && (
+            <Body>
+              Auf dem iPhone gehen Benachrichtigungen nur, wenn die App auf dem Startbildschirm liegt: In Safari auf
+              Teilen (Quadrat mit Pfeil) tippen, „Zum Home-Bildschirm“ wählen und die App dann von dort öffnen.
+            </Body>
+          )}
+          {push === 'denied' && (
+            <Body>Benachrichtigungen sind für diese Seite blockiert. Erlaube sie in den Browser-Einstellungen.</Body>
+          )}
+          {(push === 'default' || push === 'granted') && (
+            <Muted>
+              {push === 'granted'
+                ? 'Auf diesem Gerät aktiv. Du bekommst eine Nachricht, wenn jemand anderes etwas einträgt.'
+                : 'Lass dich benachrichtigen, wenn jemand anderes etwas einträgt.'}
+            </Muted>
+          )}
+          {(push === 'default' || push === 'granted') && (
+            <Button
+              label={push === 'granted' ? 'Auf diesem Gerät erneut aktivieren' : 'Benachrichtigungen aktivieren'}
+              variant={push === 'granted' ? 'secondary' : 'primary'}
+              loading={pushBusy}
+              onPress={async () => {
+                setPushBusy(true);
+                try {
+                  setPush(await enableWebPush());
+                } catch (e) {
+                  setMessage(`Benachrichtigungen: ${(e as Error).message}`);
+                }
+                setPushBusy(false);
+              }}
+            />
+          )}
+          {push === 'granted' && (
+            <Button
+              label="Testnachricht senden"
+              variant="secondary"
+              onPress={() =>
+                sendTestPush()
+                  .then(() => setMessage('Testnachricht verschickt.'))
+                  .catch((e) => setMessage(`Test fehlgeschlagen: ${(e as Error).message}`))
+              }
+            />
+          )}
         </Card>
       )}
 

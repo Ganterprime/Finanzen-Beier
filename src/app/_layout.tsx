@@ -8,6 +8,7 @@ import { Body, Card, Loading, Screen, Title } from '@/components/ui';
 import { registerForPush } from '@/lib/push';
 import { isConfigured } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
+import { setupWebApp } from '@/lib/webPush';
 import { HouseholdProvider, useHousehold } from '@/providers/HouseholdProvider';
 import { SessionProvider, useSession } from '@/providers/SessionProvider';
 
@@ -16,6 +17,10 @@ const initialWebPath =
   Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.pathname + window.location.search : null;
 
 export default function RootLayout() {
+  useEffect(() => {
+    setupWebApp();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <StatusBar style="auto" />
