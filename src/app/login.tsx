@@ -18,7 +18,13 @@ export default function Login() {
     setMessage(null);
     const creds = { email: email.trim(), password };
     const { error, data } =
-      mode === 'login' ? await supabase.auth.signInWithPassword(creds) : await supabase.auth.signUp(creds);
+      mode === 'login'
+        ? await supabase.auth.signInWithPassword(creds)
+        : await supabase.auth.signUp({
+            ...creds,
+            // Bestätigungslink führt im Browser zurück zur App
+            options: { emailRedirectTo: Platform.OS === 'web' ? window.location.origin : undefined },
+          });
     setBusy(false);
     if (error) setMessage(error.message);
     else if (mode === 'signup' && !data.session) setMessage('Fast geschafft: Bitte bestätige die E-Mail in deinem Postfach.');

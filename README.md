@@ -38,7 +38,7 @@ in den Haushalt. Keine Bankanbindung.
 ### 2. App starten
 
 ```bash
-cp .env.example .env      # URL und anon key aus Project Settings → API eintragen
+# .env enthält bereits die öffentliche Projekt-URL und den Publishable Key
 npm install
 npm run web               # im Browser
 npx expo start            # QR-Code mit Expo Go (Handy) scannen
@@ -65,8 +65,9 @@ Typ „Supabase Edge Function“ → `notify-new-transaction`, HTTP-Header `x-we
 
 ### 5. Veröffentlichen
 
-- **PC/Web:** `npm run build:web` erzeugt `dist/`, das z. B. bei Netlify oder Vercel hochgeladen wird.
-  Die Umgebungsvariablen dort ebenfalls setzen.
+- **PC/Web:** Bei [Vercel](https://vercel.com) das GitHub-Repo importieren; `vercel.json` enthält Build-Befehl
+  und Ausgabeordner. Danach in Supabase unter *Authentication → URL Configuration* die Vercel-Adresse als
+  **Site URL** eintragen, damit Bestätigungslinks zur App führen.
 - **Android:** `npx eas-cli@latest build -p android --profile preview` erzeugt eine APK zum Installieren.
 - **iOS:** braucht einen Apple-Developer-Account; dann `npx eas-cli@latest build -p ios` und TestFlight.
 
