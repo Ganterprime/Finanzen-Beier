@@ -30,6 +30,8 @@ export default function Settings() {
   const [message, setMessage] = useState<string | null>(null);
   const [push, setPush] = useState<WebPushStatus>(webPushStatus());
   const [pushBusy, setPushBusy] = useState(false);
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
 
   const loadInvitations = useCallback(async () => {
     if (!isOwner || !household) return;
@@ -57,6 +59,16 @@ export default function Settings() {
     setMessage('Name gespeichert.');
   };
 
+  const changePassword = async () => {
+    if (password.length < 6) return setMessage('Das Passwort muss mindestens 6 Zeichen haben.');
+    if (password !== password2) return setMessage('Die beiden Passwörter stimmen nicht überein.');
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return setMessage(`Passwort ändern: ${error.message}`);
+    setPassword('');
+    setPassword2('');
+    setMessage('Passwort geändert.');
+  };
+
   const invite = async () => {
     const { error } = await supabase.from('invitations').insert({ household_id: household!.id, email: email.trim() });
     if (error) return setMessage(error.message);
@@ -82,6 +94,25 @@ export default function Settings() {
         <Title>Dein Name</Title>
         <Field label="Anzeigename" value={displayName} onChangeText={setDisplayName} />
         <Button label="Speichern" variant="secondary" onPress={saveName} />
+      </Card>
+
+      <Card>
+        <Title>Passwort ändern</Title>
+        <Field
+          label="Neues Passwort"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete="new-password"
+        />
+        <Field
+          label="Neues Passwort wiederholen"
+          value={password2}
+          onChangeText={setPassword2}
+          secureTextEntry
+          autoComplete="new-password"
+        />
+        <Button label="Passwort ändern" variant="secondary" onPress={changePassword} disabled={!password} />
       </Card>
 
       {isOwner && (

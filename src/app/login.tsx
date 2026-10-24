@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Body, Button, Card, Field, Muted, Screen, Segmented } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +28,20 @@ export default function Login() {
     setBusy(false);
     if (error) setMessage(error.message);
     else if (mode === 'signup' && !data.session) setMessage('Fast geschafft: Bitte bestätige die E-Mail in deinem Postfach.');
+  };
+
+  const forgot = async () => {
+    if (!email.trim()) return setMessage('Bitte zuerst deine E-Mail-Adresse eintragen.');
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+    });
+    setBusy(false);
+    setMessage(
+      error
+        ? error.message
+        : 'Wir haben dir einen Link geschickt. Nach dem Klick bist du angemeldet und kannst unter Einstellungen ein neues Passwort setzen.',
+    );
   };
 
   return (
@@ -69,6 +83,11 @@ export default function Login() {
             loading={busy}
             disabled={!email || password.length < 6}
           />
+          {mode === 'login' && (
+            <Pressable onPress={forgot} hitSlop={8}>
+              <Text style={{ color: t.primary, textAlign: 'center' }}>Passwort vergessen?</Text>
+            </Pressable>
+          )}
           {mode === 'signup' && (
             <Muted>Registrieren lohnt sich nur mit Einladung: Daten sieht nur, wer zum Haushalt gehört.</Muted>
           )}
