@@ -86,3 +86,25 @@ export function sumByCategory(items: Transaction[], type: 'ausgabe' | 'einnahme'
     .map(([categoryId, cents]) => ({ categoryId, cents }))
     .sort((a, b) => b.cents - a.cents);
 }
+
+/**
+ * Verfügbarer Betrag pro Person: eigene Einnahmen minus eigene Ausgaben,
+ * gemeinsame Buchungen werden zu gleichen Teilen aufgeteilt.
+ */
+export function availablePerPerson(items: Transaction[], memberIds: string[]) {
+  const result = new Map(memberIds.map((id) => [id, { income: 0, expense: 0 }]));
+  const n = memberIds.length || 1;
+  for (const t of items) {
+    const targets = t.person_id && result.has(t.person_id) ? [t.person_id] : memberIds;
+    const share = t.person_id && result.has(t.person_id) ? t.amount_cents : t.amount_cents / n;
+    for (const id of targets) {
+      const r = result.get(id)!;
+      if (t.type === 'einnahme') r.income += share;
+      else r.expense += share;
+    }
+  }
+  return memberIds.map((id) => {
+    const r = result.get(id)!;
+    return { userId: id, income: Math.round(r.income), expense: Math.round(r.expense), available: Math.round(r.income - r.expense) };
+  });
+}

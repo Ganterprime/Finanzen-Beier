@@ -39,6 +39,7 @@ export interface Transaction {
   note: string | null;
   source: 'manuell' | 'fixkosten';
   fixed_cost_id: string | null;
+  savings_goal_id: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -57,6 +58,19 @@ export interface FixedCost {
   person_id: string | null;
   active: boolean;
   note: string | null;
+}
+
+export interface SavingsGoal {
+  id: string;
+  household_id: string;
+  name: string;
+  icon: string;
+  color: string;
+  target_cents: number;
+  start_cents: number;
+  target_date: string | null;
+  person_id: string | null;
+  archived: boolean;
 }
 
 /** 'alle' = gemeinsame Ansicht, sonst die user_id einer Person */

@@ -8,6 +8,7 @@ import { daysAgo, parseGermanDate } from '@/lib/dates';
 import { centsToInput, formatDate, parseAmount } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
+import { useSavingsGoals } from '@/lib/useSavingsGoals';
 import type { EntryType, Transaction } from '@/lib/types';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { useSession } from '@/providers/SessionProvider';
@@ -24,6 +25,8 @@ export default function BookingForm() {
   const [date, setDate] = useState(formatDate(daysAgo(0)));
   const [personId, setPersonId] = useState<string | null>(session?.user.id ?? null);
   const [note, setNote] = useState('');
+  const [goalId, setGoalId] = useState<string | null>(null);
+  const { goals } = useSavingsGoals();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +46,7 @@ export default function BookingForm() {
         setDate(formatDate(tx.booked_on));
         setPersonId(tx.person_id);
         setNote(tx.note ?? '');
+        setGoalId(tx.savings_goal_id);
       });
   }, [id]);
 
@@ -67,6 +71,7 @@ export default function BookingForm() {
       booked_on: bookedOn,
       person_id: personId,
       note: note.trim() || null,
+      savings_goal_id: goalId,
     };
     const { error } = id
       ? await supabase.from('transactions').update(row).eq('id', id)
@@ -150,6 +155,31 @@ export default function BookingForm() {
 
       <Field label="Notiz (optional)" value={note} onChangeText={setNote} placeholder="z. B. Wocheneinkauf" />
 
+      {goals.some((g) => !g.archived || g.id === goalId) && (
+        <>
+          <Muted>{type === 'ausgabe' ? 'Einzahlung auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}</Muted>
+          <View style={styles.chips}>
+            {[{ id: null as string | null, icon: '', name: 'Keins' }, ...goals.filter((g) => !g.archived || g.id === goalId)].map(
+              (g) => {
+                const active = g.id === goalId;
+                return (
+                  <Pressable
+                    key={g.id ?? 'none'}
+                    onPress={() => setGoalId(g.id)}
+                    style={[styles.chip, { backgroundColor: active ? t.primary : t.chip }]}
+                  >
+                    <Text style={{ color: active ? '#fff' : t.text }}>
+                      {g.icon ? `${g.icon} ` : ''}
+                      {g.name}
+                    </Text>
+                  </Pressable>
+                );
+              },
+            )}
+          </View>
+        </>
+      )}
+
       {error && <Body style={{ color: t.expense }}>{error}</Body>}
       <Button label="Speichern" onPress={save} loading={busy} />
       {id && <Button label="Löschen" variant="danger" onPress={remove} />}
@@ -167,6 +197,6 @@ const styles = StyleSheet.create({
   },
   amount: { flex: 1, minWidth: 0, outlineWidth: 0, fontSize: 36, fontWeight: '700', paddingVertical: 10 },
   currency: { fontSize: 28, fontWeight: '600' },
-  chips: { flexDirection: 'row', gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
 });

@@ -1,19 +1,28 @@
+import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AddButton } from '@/components/AddButton';
 import { CategoryBars } from '@/components/CategoryBars';
 import { FilterBar } from '@/components/FilterBar';
 import { TransactionRow } from '@/components/TransactionRow';
-import { Card, Muted, Screen, Title } from '@/components/ui';
+import { GoalRow } from '@/components/GoalRow';
+import { Button, Card, Muted, Screen, Title } from '@/components/ui';
 import { formatEuro } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
-import { byScope, sumByCategory, totals, useTransactions } from '@/lib/useTransactions';
+import { useSavingsGoals } from '@/lib/useSavingsGoals';
+import { availablePerPerson, byScope, sumByCategory, totals, useTransactions } from '@/lib/useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export default function Overview() {
   const t = useTheme();
-  const { period, scope, category } = useHousehold();
+  const { period, scope, category, members, memberName } = useHousehold();
   const { items } = useTransactions(period);
+  const { goals } = useSavingsGoals();
+  const activeGoals = goals.filter((g) => !g.archived);
+  const available = availablePerPerson(
+    items,
+    members.map((m) => m.user_id),
+  ).filter((p) => scope === 'alle' || p.userId === scope);
   const shown = byScope(items, scope);
   const sum = totals(shown, (id) => category(id)?.is_fixed_cost ?? false);
 
@@ -32,6 +41,46 @@ export default function Overview() {
             <Stat label="Ausgaben" value={sum.expense} color={t.expense} />
             <Stat label="davon Fixkosten" value={sum.fixed} color={t.muted} />
           </View>
+        </Card>
+
+        {members.length > 1 && (
+          <Card>
+            <Title>Verfügbar</Title>
+            <Muted>Eigene Einnahmen minus eigene Ausgaben, Gemeinsames je zur Hälfte.</Muted>
+            {available.map((p) => (
+              <View key={p.userId} style={styles.personRow}>
+                <Text style={{ color: t.text, flex: 1, fontSize: 15 }}>{memberName(p.userId)}</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text
+                    style={{
+                      color: p.available >= 0 ? t.income : t.expense,
+                      fontSize: 18,
+                      fontWeight: '700',
+                      fontVariant: ['tabular-nums'],
+                    }}
+                  >
+                    {formatEuro(p.available)}
+                  </Text>
+                  <Muted style={{ fontSize: 12 }}>
+                    {formatEuro(p.income)} rein · {formatEuro(p.expense)} raus
+                  </Muted>
+                </View>
+              </View>
+            ))}
+          </Card>
+        )}
+
+        <Card style={{ gap: 16 }}>
+          <Title>Sparziele</Title>
+          {activeGoals.length === 0 && <Muted>Noch kein Sparziel angelegt.</Muted>}
+          {activeGoals.slice(0, 3).map((g) => (
+            <GoalRow key={g.id} goal={g} />
+          ))}
+          <Button
+            label={activeGoals.length ? 'Alle Sparziele' : 'Sparziel anlegen'}
+            variant="secondary"
+            onPress={() => router.push(activeGoals.length ? '/sparziele' : '/sparziel-form')}
+          />
         </Card>
 
         <Card>
@@ -67,4 +116,5 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 const styles = StyleSheet.create({
   big: { fontSize: 32, fontWeight: '800', fontVariant: ['tabular-nums'] },
   split: { flexDirection: 'row', gap: 10 },
+  personRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
 });
