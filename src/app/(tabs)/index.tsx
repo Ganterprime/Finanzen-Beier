@@ -20,7 +20,8 @@ export default function Overview() {
   const { period, scope, category, members, memberName } = useHousehold();
   const { items } = useTransactions(period);
   const { goals } = useSavingsGoals();
-  const activeGoals = goals.filter((g) => !g.archived);
+  // Auf der Übersicht nur die gemeinsamen Töpfe (Notgroschen, Urlaub, Hauskonto …)
+  const sharedGoals = goals.filter((g) => !g.archived && !g.person_id);
   const { budgets } = useBudgets();
   const usage = budgetUsage(
     budgets,
@@ -96,15 +97,15 @@ export default function Overview() {
         </Card>
 
         <Card style={{ gap: 16 }}>
-          <Title>Sparziele</Title>
-          {activeGoals.length === 0 && <Muted>Noch kein Sparziel angelegt.</Muted>}
-          {activeGoals.slice(0, 3).map((g) => (
+          <Title>Spartöpfe</Title>
+          {sharedGoals.length === 0 && <Muted>Noch kein gemeinsamer Spartopf angelegt.</Muted>}
+          {sharedGoals.map((g) => (
             <GoalRow key={g.id} goal={g} />
           ))}
           <Button
-            label={activeGoals.length ? 'Alle Sparziele' : 'Sparziel anlegen'}
+            label={goals.length ? 'Alle Spartöpfe' : 'Spartopf anlegen'}
             variant="secondary"
-            onPress={() => router.push(activeGoals.length ? '/sparziele' : '/sparziel-form')}
+            onPress={() => router.push(goals.length ? '/sparziele' : '/sparziel-form')}
           />
         </Card>
 

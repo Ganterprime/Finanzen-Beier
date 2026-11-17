@@ -66,8 +66,8 @@ export default function FixedCosts() {
       {savings.length > 0 && <Section title="Sparen" items={savings} loading={loading} />}
       <Section title="Feste Einnahmen" items={incomes} loading={loading} />
       <Muted>
-        Fixkosten werden am Fälligkeitstag automatisch als Buchung eingetragen. Sparraten zahlen dabei direkt auf ihr
-        Sparziel ein. Weicht ein Betrag einmal ab, passe
+        Fixkosten werden am Fälligkeitstag automatisch als Buchung eingetragen. Sparraten zahlen dabei direkt in ihren
+        Spartopf ein. Weicht ein Betrag einmal ab, passe
         einfach diese eine Buchung an.
       </Muted>
     </Screen>

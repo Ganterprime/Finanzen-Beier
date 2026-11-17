@@ -53,7 +53,7 @@ export default function SavingsGoalForm() {
     const targetCents = target.trim() ? parseAmount(target) : null;
     const startCents = start.trim() ? parseAmount(start) : 0;
     const targetDate = date.trim() ? parseGermanDate(date) : null;
-    if (!name.trim()) return setError('Bitte einen Namen eingeben, z. B. Urlaub 2027.');
+    if (!name.trim()) return setError('Bitte einen Namen eingeben, z. B. Notgroschen.');
     if (target.trim() && !targetCents) return setError('Bitte einen gültigen Zielbetrag eingeben oder das Feld leeren.');
     if (startCents == null) return setError('Bitte einen gültigen Betrag für „schon gespart“ eingeben.');
     if (date.trim() && !targetDate) return setError('Bitte ein gültiges Zieldatum eingeben (TT.MM.JJJJ).');
@@ -83,11 +83,11 @@ export default function SavingsGoalForm() {
       await supabase.from('savings_goals').delete().eq('id', id!);
       router.back();
     };
-    const text = 'Die Buchungen bleiben erhalten, sind dann aber keinem Ziel mehr zugeordnet.';
+    const text = 'Die Buchungen bleiben erhalten, sind dann aber keinem Topf mehr zugeordnet.';
     if (Platform.OS === 'web') {
-      if (window.confirm(`Sparziel löschen? ${text}`)) doDelete();
+      if (window.confirm(`Spartopf löschen? ${text}`)) doDelete();
     } else {
-      Alert.alert('Sparziel löschen?', text, [
+      Alert.alert('Spartopf löschen?', text, [
         { text: 'Abbrechen', style: 'cancel' },
         { text: 'Löschen', style: 'destructive', onPress: doDelete },
       ]);
@@ -96,13 +96,13 @@ export default function SavingsGoalForm() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: id ? 'Sparziel bearbeiten' : 'Neues Sparziel' }} />
+      <Stack.Screen options={{ title: id ? 'Spartopf bearbeiten' : 'Neuer Spartopf' }} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ width: 70 }}>
           <Field label="Symbol" value={icon} onChangeText={setIcon} />
         </View>
         <View style={{ flex: 1 }}>
-          <Field label="Name" value={name} onChangeText={setName} placeholder="z. B. Urlaub 2027" />
+          <Field label="Name" value={name} onChangeText={setName} placeholder="z. B. Notgroschen" />
         </View>
       </View>
       <View style={styles.colors}>
@@ -114,7 +114,7 @@ export default function SavingsGoalForm() {
           />
         ))}
       </View>
-      <Field label="Zielbetrag (€, leer = Topf ohne Ziel)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="0,00" />
+      <Field label="Zielbetrag (€, optional)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="0,00" />
       <Field label="Zieldatum (optional)" value={date} onChangeText={setDate} placeholder="TT.MM.JJJJ" />
       <Field
         label="Schon gespart (optional)"

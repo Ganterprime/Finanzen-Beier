@@ -93,8 +93,8 @@ function RootStack() {
           <Stack.Screen name="buchung" options={{ presentation: 'modal', title: 'Buchung' }} />
           <Stack.Screen name="fixkosten-form" options={{ presentation: 'modal', title: 'Fixkosten' }} />
           <Stack.Screen name="kategorien" options={{ title: 'Kategorien' }} />
-          <Stack.Screen name="sparziele" options={{ title: 'Sparziele' }} />
-          <Stack.Screen name="sparziel-form" options={{ presentation: 'modal', title: 'Sparziel' }} />
+          <Stack.Screen name="sparziele" options={{ title: 'Spartöpfe' }} />
+          <Stack.Screen name="sparziel-form" options={{ presentation: 'modal', title: 'Spartopf' }} />
           <Stack.Screen name="budgets" options={{ title: 'Budgets' }} />
           <Stack.Screen name="budget-form" options={{ presentation: 'modal', title: 'Budget' }} />
         </Stack.Protected>

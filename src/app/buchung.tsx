@@ -155,7 +155,7 @@ export default function BookingForm() {
       <Field label="Notiz (optional)" value={note} onChangeText={setNote} placeholder="z. B. Wocheneinkauf" />
 
       <GoalPicker
-        label={type === 'ausgabe' ? 'Einzahlung auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}
+        label={type === 'ausgabe' ? 'Einzahlung in Spartopf (optional)' : 'Entnahme aus Spartopf (optional)'}
         value={goalId}
         onChange={setGoalId}
       />

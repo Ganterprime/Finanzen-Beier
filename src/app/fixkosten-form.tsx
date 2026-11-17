@@ -157,7 +157,7 @@ export default function FixedCostForm() {
         onChange={setPersonId}
       />
       <GoalPicker
-        label={type === 'ausgabe' ? 'Zahlt ein auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}
+        label={type === 'ausgabe' ? 'Zahlt ein in Spartopf (optional)' : 'Entnahme aus Spartopf (optional)'}
         value={goalId}
         onChange={setGoalId}
       />
