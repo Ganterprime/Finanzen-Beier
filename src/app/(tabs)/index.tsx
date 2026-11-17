@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AddButton } from '@/components/AddButton';
 import { BudgetRow } from '@/components/BudgetRow';
-import { CategoryBars } from '@/components/CategoryBars';
 import { FilterBar } from '@/components/FilterBar';
 import { TransactionRow } from '@/components/TransactionRow';
 import { GoalRow } from '@/components/GoalRow';
@@ -16,7 +15,6 @@ import {
   availablePerPerson,
   byScope,
   sharedAccount,
-  sumByCategory,
   totals,
   TRANSFER_CATEGORY,
   useTransactions,
@@ -126,11 +124,6 @@ export default function Overview() {
             variant="secondary"
             onPress={() => router.push(goals.length ? '/sparziele' : '/sparziel-form')}
           />
-        </Card>
-
-        <Card>
-          <Title>Top-Kategorien</Title>
-          <CategoryBars rows={sumByCategory(shown, 'ausgabe')} limit={5} />
         </Card>
 
         <Card>
