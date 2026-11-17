@@ -41,7 +41,7 @@ export default function SavingsGoalForm() {
         setName(g.name);
         setIcon(g.icon);
         setColor(g.color);
-        setTarget(centsToInput(g.target_cents));
+        setTarget(g.target_cents ? centsToInput(g.target_cents) : '');
         setStart(g.start_cents ? centsToInput(g.start_cents) : '');
         setDate(g.target_date ? formatDate(g.target_date) : '');
         setPersonId(g.person_id);
@@ -50,11 +50,11 @@ export default function SavingsGoalForm() {
   }, [id]);
 
   const save = async () => {
-    const targetCents = parseAmount(target);
+    const targetCents = target.trim() ? parseAmount(target) : null;
     const startCents = start.trim() ? parseAmount(start) : 0;
     const targetDate = date.trim() ? parseGermanDate(date) : null;
     if (!name.trim()) return setError('Bitte einen Namen eingeben, z. B. Urlaub 2027.');
-    if (!targetCents) return setError('Bitte einen gültigen Zielbetrag eingeben.');
+    if (target.trim() && !targetCents) return setError('Bitte einen gültigen Zielbetrag eingeben oder das Feld leeren.');
     if (startCents == null) return setError('Bitte einen gültigen Betrag für „schon gespart“ eingeben.');
     if (date.trim() && !targetDate) return setError('Bitte ein gültiges Zieldatum eingeben (TT.MM.JJJJ).');
     setBusy(true);
@@ -114,7 +114,7 @@ export default function SavingsGoalForm() {
           />
         ))}
       </View>
-      <Field label="Zielbetrag (€)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="0,00" />
+      <Field label="Zielbetrag (€, leer = Topf ohne Ziel)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="0,00" />
       <Field label="Zieldatum (optional)" value={date} onChangeText={setDate} placeholder="TT.MM.JJJJ" />
       <Field
         label="Schon gespart (optional)"

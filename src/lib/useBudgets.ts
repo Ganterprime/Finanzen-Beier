@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useState } from 'react';
 
 import { supabase } from './supabase';
 import type { Budget, Period, Transaction } from './types';
+import { shareWeights } from './useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export interface BudgetUsage extends Budget {
@@ -53,7 +54,7 @@ export function useBudgets() {
 
 /**
  * Verbrauch je Budget im Zeitraum. Bei einem Personen-Budget zählen die eigenen
- * Ausgaben voll und gemeinsame Ausgaben anteilig (wie bei „Verfügbar“).
+ * Ausgaben voll und gemeinsame Ausgaben nach Einkommensanteil (wie bei „Verfügbar“).
  * Einzahlungen auf Sparziele zählen nicht.
  */
 export function budgetUsage(
@@ -63,7 +64,7 @@ export function budgetUsage(
   period: Period,
 ): BudgetUsage[] {
   const months = period.month == null ? 12 : 1;
-  const n = memberIds.length || 1;
+  const weights = shareWeights(items, memberIds);
   return budgets.map((b) => {
     let spent = 0;
     for (const t of items) {
@@ -71,7 +72,7 @@ export function budgetUsage(
       if (b.category_ids.length && !b.category_ids.includes(t.category_id)) continue;
       if (b.person_id == null) spent += t.amount_cents;
       else if (t.person_id === b.person_id) spent += t.amount_cents;
-      else if (t.person_id == null || !memberIds.includes(t.person_id)) spent += t.amount_cents / n;
+      else if (t.person_id == null || !memberIds.includes(t.person_id)) spent += t.amount_cents * (weights.get(b.person_id) ?? 0);
     }
     const limitCents = b.amount_cents * months;
     const spentCents = Math.round(spent);

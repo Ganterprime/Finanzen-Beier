@@ -8,6 +8,23 @@ import type { GoalProgress } from '@/lib/useSavingsGoals';
 export function GoalRow({ goal }: { goal: GoalProgress }) {
   const t = useTheme();
   const done = goal.remainingCents === 0;
+  // Topf ohne Ziel: nur den Stand zeigen
+  if (goal.progress == null) {
+    return (
+      <Pressable
+        onPress={() => router.push({ pathname: '/sparziel-form', params: { id: goal.id } })}
+        style={({ pressed }) => [styles.line, { opacity: pressed ? 0.6 : goal.archived ? 0.45 : 1 }]}
+      >
+        <Text style={{ fontSize: 18 }}>{goal.icon}</Text>
+        <Text style={[styles.name, { color: t.text }]} numberOfLines={1}>
+          {goal.name}
+        </Text>
+        <Text style={{ color: t.text, fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] }}>
+          {formatEuro(goal.savedCents)}
+        </Text>
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/sparziel-form', params: { id: goal.id } })}
@@ -24,7 +41,7 @@ export function GoalRow({ goal }: { goal: GoalProgress }) {
         <View style={[styles.bar, { width: `${Math.max(2, goal.progress * 100)}%`, backgroundColor: goal.color }]} />
       </View>
       <Text style={{ color: t.muted, fontSize: 12 }}>
-        {formatEuro(goal.savedCents)} von {formatEuro(goal.target_cents)}
+        {formatEuro(goal.savedCents)} von {formatEuro(goal.target_cents ?? 0)}
         {goal.target_date ? ` · bis ${formatDate(goal.target_date)}` : ''}
       </Text>
       {done ? (
@@ -32,7 +49,7 @@ export function GoalRow({ goal }: { goal: GoalProgress }) {
       ) : (
         goal.perMonthCents != null && (
           <Text style={{ color: t.text, fontSize: 13 }}>
-            Noch {formatEuro(goal.remainingCents)}: {formatEuro(goal.perMonthCents)} pro Monat
+            Noch {formatEuro(goal.remainingCents ?? 0)}: {formatEuro(goal.perMonthCents)} pro Monat
             {goal.monthsLeft === 1 ? ' (letzter Monat)' : ` für ${goal.monthsLeft} Monate`}
           </Text>
         )

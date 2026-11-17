@@ -58,6 +58,8 @@ export interface FixedCost {
   person_id: string | null;
   active: boolean;
   note: string | null;
+  /** Buchungen zahlen auf dieses Sparziel ein */
+  savings_goal_id: string | null;
 }
 
 export interface SavingsGoal {
@@ -66,7 +68,8 @@ export interface SavingsGoal {
   name: string;
   icon: string;
   color: string;
-  target_cents: number;
+  /** null = Topf ohne festes Ziel */
+  target_cents: number | null;
   start_cents: number;
   target_date: string | null;
   person_id: string | null;

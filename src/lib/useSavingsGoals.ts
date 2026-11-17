@@ -6,9 +6,10 @@ import { useHousehold } from '@/providers/HouseholdProvider';
 
 export interface GoalProgress extends SavingsGoal {
   savedCents: number;
-  /** 0–1 */
-  progress: number;
-  remainingCents: number;
+  /** 0–1, null bei einem Topf ohne Ziel */
+  progress: number | null;
+  /** null bei einem Topf ohne Ziel */
+  remainingCents: number | null;
   /** Nötige Sparrate pro Monat bis zum Zieldatum, null ohne Datum */
   perMonthCents: number | null;
   monthsLeft: number | null;
@@ -46,6 +47,9 @@ export function useSavingsGoals() {
     setGoals(
       ((g as SavingsGoal[]) ?? []).map((goal) => {
         const savedCents = goal.start_cents + (saved.get(goal.id) ?? 0);
+        if (!goal.target_cents) {
+          return { ...goal, savedCents, remainingCents: null, progress: null, monthsLeft: null, perMonthCents: null };
+        }
         const remainingCents = Math.max(0, goal.target_cents - savedCents);
         const monthsLeft = goal.target_date ? monthsUntil(goal.target_date) : null;
         return {

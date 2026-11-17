@@ -8,7 +8,7 @@ import { FilterBar } from '@/components/FilterBar';
 import { TransactionRow } from '@/components/TransactionRow';
 import { GoalRow } from '@/components/GoalRow';
 import { Button, Card, Muted, Screen, Title } from '@/components/ui';
-import { formatEuro } from '@/lib/format';
+import { formatEuro, formatPercent } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
 import { budgetUsage, useBudgets } from '@/lib/useBudgets';
 import { useSavingsGoals } from '@/lib/useSavingsGoals';
@@ -55,10 +55,13 @@ export default function Overview() {
         {members.length > 1 && (
           <Card>
             <Title>Verfügbar</Title>
-            <Muted>Eigene Einnahmen minus eigene Ausgaben, Gemeinsames je zur Hälfte.</Muted>
+            <Muted>Eigene Einnahmen minus eigene Ausgaben. Gemeinsames teilt ihr nach Einkommen.</Muted>
             {available.map((p) => (
               <View key={p.userId} style={styles.personRow}>
-                <Text style={{ color: t.text, flex: 1, fontSize: 15 }}>{memberName(p.userId)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: t.text, fontSize: 15 }}>{memberName(p.userId)}</Text>
+                  <Muted style={{ fontSize: 12 }}>Anteil Gemeinsames {formatPercent(p.share)}</Muted>
+                </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text
                     style={{

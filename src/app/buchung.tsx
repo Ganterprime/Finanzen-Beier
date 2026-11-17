@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { CategoryGrid } from '@/components/CategoryGrid';
+import { GoalPicker } from '@/components/GoalPicker';
 import { Body, Button, Field, Muted, Screen, Segmented } from '@/components/ui';
 import { daysAgo, parseGermanDate } from '@/lib/dates';
 import { centsToInput, formatDate, parseAmount } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
-import { useSavingsGoals } from '@/lib/useSavingsGoals';
 import type { EntryType, Transaction } from '@/lib/types';
 import { useHousehold } from '@/providers/HouseholdProvider';
 import { useSession } from '@/providers/SessionProvider';
@@ -26,7 +26,6 @@ export default function BookingForm() {
   const [personId, setPersonId] = useState<string | null>(session?.user.id ?? null);
   const [note, setNote] = useState('');
   const [goalId, setGoalId] = useState<string | null>(null);
-  const { goals } = useSavingsGoals();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,30 +154,11 @@ export default function BookingForm() {
 
       <Field label="Notiz (optional)" value={note} onChangeText={setNote} placeholder="z. B. Wocheneinkauf" />
 
-      {goals.some((g) => !g.archived || g.id === goalId) && (
-        <>
-          <Muted>{type === 'ausgabe' ? 'Einzahlung auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}</Muted>
-          <View style={styles.chips}>
-            {[{ id: null as string | null, icon: '', name: 'Keins' }, ...goals.filter((g) => !g.archived || g.id === goalId)].map(
-              (g) => {
-                const active = g.id === goalId;
-                return (
-                  <Pressable
-                    key={g.id ?? 'none'}
-                    onPress={() => setGoalId(g.id)}
-                    style={[styles.chip, { backgroundColor: active ? t.primary : t.chip }]}
-                  >
-                    <Text style={{ color: active ? '#fff' : t.text }}>
-                      {g.icon ? `${g.icon} ` : ''}
-                      {g.name}
-                    </Text>
-                  </Pressable>
-                );
-              },
-            )}
-          </View>
-        </>
-      )}
+      <GoalPicker
+        label={type === 'ausgabe' ? 'Einzahlung auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}
+        value={goalId}
+        onChange={setGoalId}
+      />
 
       {error && <Body style={{ color: t.expense }}>{error}</Body>}
       <Button label="Speichern" onPress={save} loading={busy} />

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Switch, View } from 'react-native';
 
 import { CategoryGrid } from '@/components/CategoryGrid';
+import { GoalPicker } from '@/components/GoalPicker';
 import { Body, Button, Field, Muted, Screen, Segmented } from '@/components/ui';
 import { parseGermanDate } from '@/lib/dates';
 import { centsToInput, formatDate, parseAmount, toISODate } from '@/lib/format';
@@ -26,6 +27,7 @@ export default function FixedCostForm() {
   const [end, setEnd] = useState('');
   const [personId, setPersonId] = useState<string | null>(null);
   const [active, setActive] = useState(true);
+  const [goalId, setGoalId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +51,7 @@ export default function FixedCostForm() {
         setEnd(f.end_date ? formatDate(f.end_date) : '');
         setPersonId(f.person_id);
         setActive(f.active);
+        setGoalId(f.savings_goal_id);
       });
   }, [id]);
 
@@ -86,6 +89,7 @@ export default function FixedCostForm() {
       end_date: endDate,
       person_id: personId,
       active,
+      savings_goal_id: goalId,
     };
     const { error } = id
       ? await supabase.from('fixed_costs').update(row).eq('id', id)
@@ -151,6 +155,11 @@ export default function FixedCostForm() {
         ]}
         value={personId}
         onChange={setPersonId}
+      />
+      <GoalPicker
+        label={type === 'ausgabe' ? 'Zahlt ein auf Sparziel (optional)' : 'Entnahme aus Sparziel (optional)'}
+        value={goalId}
+        onChange={setGoalId}
       />
       {id && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

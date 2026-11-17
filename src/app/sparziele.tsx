@@ -37,8 +37,9 @@ export default function SavingsGoals() {
         </Card>
       )}
       <Muted>
-        Einzahlungen trägst du als Ausgabe ein (z. B. Kategorie „Sparen & Anlage“) und wählst unten im Formular das
-        Sparziel aus. Eine Einnahme mit Sparziel zählt als Entnahme.
+        Feste Sparraten legst du unter Fixkosten an und wählst dort das Sparziel aus, dann wird jeden Monat automatisch
+        eingezahlt. Einzelne Einzahlungen trägst du als Ausgabe ein und wählst unten im Formular das Sparziel. Eine
+        Einnahme mit Sparziel zählt als Entnahme. Ein Sparziel ohne Zielbetrag ist ein Topf, der nur den Stand zeigt.
       </Muted>
     </Screen>
   );
