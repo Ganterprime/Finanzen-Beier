@@ -8,11 +8,19 @@ import { FilterBar } from '@/components/FilterBar';
 import { TransactionRow } from '@/components/TransactionRow';
 import { GoalRow } from '@/components/GoalRow';
 import { Button, Card, Muted, Screen, Title } from '@/components/ui';
-import { formatEuro, formatPercent } from '@/lib/format';
+import { formatEuro } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
 import { budgetUsage, useBudgets } from '@/lib/useBudgets';
 import { useSavingsGoals } from '@/lib/useSavingsGoals';
-import { availablePerPerson, byScope, sumByCategory, totals, useTransactions } from '@/lib/useTransactions';
+import {
+  availablePerPerson,
+  byScope,
+  sharedAccount,
+  sumByCategory,
+  totals,
+  TRANSFER_CATEGORY,
+  useTransactions,
+} from '@/lib/useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export default function Overview() {
@@ -33,7 +41,9 @@ export default function Overview() {
     items,
     members.map((m) => m.user_id),
   ).filter((p) => scope === 'alle' || p.userId === scope);
-  const shown = byScope(items, scope);
+  const isTransfer = (id: string) => category(id)?.name === TRANSFER_CATEGORY;
+  const account = sharedAccount(items, isTransfer);
+  const shown = byScope(items, scope, isTransfer);
   const sum = totals(shown, (id) => category(id)?.is_fixed_cost ?? false);
 
   return (
@@ -56,13 +66,10 @@ export default function Overview() {
         {members.length > 1 && (
           <Card>
             <Title>Verfügbar</Title>
-            <Muted>Eigene Einnahmen minus eigene Ausgaben. Gemeinsames teilt ihr nach Einkommen.</Muted>
+            <Muted>Eigene Einnahmen minus Überweisung aufs Gemeinschaftskonto, eigene Kosten und Sparen.</Muted>
             {available.map((p) => (
               <View key={p.userId} style={styles.personRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: t.text, fontSize: 15 }}>{memberName(p.userId)}</Text>
-                  <Muted style={{ fontSize: 12 }}>Anteil Gemeinsames {formatPercent(p.share)}</Muted>
-                </View>
+                <Text style={{ color: t.text, flex: 1, fontSize: 15 }}>{memberName(p.userId)}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text
                     style={{
@@ -80,6 +87,18 @@ export default function Overview() {
                 </View>
               </View>
             ))}
+          </Card>
+        )}
+
+        {scope === 'alle' && account.transfers > 0 && (
+          <Card>
+            <Title>Gemeinschaftskonto</Title>
+            <View style={styles.split}>
+              <Stat label="Eingezahlt" value={account.transfers} color={t.income} />
+              <Stat label="Gemeinsame Kosten" value={account.costs} color={t.expense} />
+              <Stat label="Puffer" value={account.buffer} color={account.buffer >= 0 ? t.income : t.expense} />
+            </View>
+            <Muted>Einkäufe zählen, sobald ihr sie eintragt. Jahreskosten fallen in ihrem Monat an.</Muted>
           </Card>
         )}
 

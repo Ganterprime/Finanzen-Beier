@@ -7,7 +7,7 @@ import { Card, Muted, Screen, Segmented, Title } from '@/components/ui';
 import { MONTHS, formatEuro, formatPercent, previousPeriod } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
 import type { EntryType } from '@/lib/types';
-import { byScope, sumByCategory, totals, useTransactions } from '@/lib/useTransactions';
+import { byScope, sumByCategory, totals, TRANSFER_CATEGORY, useTransactions } from '@/lib/useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export default function Analysis() {
@@ -20,20 +20,21 @@ export default function Analysis() {
   const year = useTransactions({ year: period.year, month: null });
 
   const isFixed = (id: string) => category(id)?.is_fixed_cost ?? false;
-  const shown = byScope(current.items, scope);
+  const isTransfer = (id: string) => category(id)?.name === TRANSFER_CATEGORY;
+  const shown = byScope(current.items, scope, isTransfer);
   const sum = totals(shown, isFixed);
-  const prevSum = totals(byScope(prev.items, scope), isFixed);
+  const prevSum = totals(byScope(prev.items, scope, isTransfer), isFixed);
 
   const rows = sumByCategory(shown, type);
   const compare = useMemo(
-    () => new Map(sumByCategory(byScope(prev.items, scope), type).map((r) => [r.categoryId, r.cents])),
+    () => new Map(sumByCategory(byScope(prev.items, scope, isTransfer), type).map((r) => [r.categoryId, r.cents])),
     [prev.items, scope, type],
   );
 
   // Verlauf über die Monate des gewählten Jahres
   const months = useMemo(() => {
     const out = Array.from({ length: 12 }, () => ({ income: 0, expense: 0 }));
-    for (const tx of byScope(year.items, scope)) {
+    for (const tx of byScope(year.items, scope, isTransfer)) {
       const m = Number(tx.booked_on.slice(5, 7)) - 1;
       if (tx.type === 'einnahme') out[m].income += tx.amount_cents;
       else out[m].expense += tx.amount_cents;

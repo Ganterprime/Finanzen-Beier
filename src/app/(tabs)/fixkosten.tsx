@@ -6,15 +6,18 @@ import { FREQUENCY_LABEL, formatEuro, formatPercent, monthlyCents } from '@/lib/
 import { useTheme } from '@/lib/theme';
 import type { FixedCost } from '@/lib/types';
 import { useFixedCosts } from '@/lib/useFixedCosts';
+import { TRANSFER_CATEGORY } from '@/lib/useTransactions';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export default function FixedCosts() {
   const t = useTheme();
-  const { members } = useHousehold();
+  const { members, category } = useHousehold();
+  // Überweisungen aufs Gemeinschaftskonto bezahlen die gemeinsamen Kosten, nicht doppelt zählen
+  const isTransfer = (f: FixedCost) => category(f.category_id)?.name === TRANSFER_CATEGORY;
   const { items, loading } = useFixedCosts();
   const active = items.filter((f) => f.active);
   const monthly = (list: FixedCost[]) => list.reduce((s, f) => s + monthlyCents(f.amount_cents, f.frequency), 0);
-  const out = monthly(active.filter((f) => f.type === 'ausgabe' && !f.savings_goal_id));
+  const out = monthly(active.filter((f) => f.type === 'ausgabe' && !f.savings_goal_id && !isTransfer(f)));
   const saving = monthly(active.filter((f) => f.type === 'ausgabe' && f.savings_goal_id));
   const income = monthly(active.filter((f) => f.type === 'einnahme'));
 

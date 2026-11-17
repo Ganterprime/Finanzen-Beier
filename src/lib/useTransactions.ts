@@ -50,8 +50,17 @@ export function useTransactions(period: Period) {
   return { items, loading, reload: load };
 }
 
-export function byScope(items: Transaction[], scope: Scope): Transaction[] {
-  return scope === 'alle' ? items : items.filter((t) => t.person_id === scope);
+/** Name der Kategorie für Überweisungen aufs Gemeinschaftskonto */
+export const TRANSFER_CATEGORY = 'Gemeinschaftskonto';
+
+/**
+ * Buchungen einer Person oder alle. Mit isTransfer werden in der gemeinsamen Ansicht die
+ * Überweisungen aufs Gemeinschaftskonto weggelassen: Das Geld bleibt im Haushalt, und die
+ * Kosten, die davon bezahlt werden, sind schon als gemeinsame Ausgaben gebucht.
+ */
+export function byScope(items: Transaction[], scope: Scope, isTransfer?: (categoryId: string) => boolean): Transaction[] {
+  if (scope !== 'alle') return items.filter((t) => t.person_id === scope);
+  return isTransfer ? items.filter((t) => !isTransfer(t.category_id)) : items;
 }
 
 export interface Totals {
@@ -88,51 +97,32 @@ export function sumByCategory(items: Transaction[], type: 'ausgabe' | 'einnahme'
 }
 
 /**
- * Anteil jeder Person an gemeinsamen Buchungen: nach ihren festen Einnahmen (Gehalt
- * aus den Fixkosten) im Zeitraum, z. B. 63 % / 37 %. Einmalige Zahlungen wie
- * Weihnachtsgeld verschieben den Anteil so nicht. Gibt es keine festen Einnahmen,
- * zählen alle Einnahmen; ohne Einnahmen wird gleichmäßig geteilt.
- */
-export function shareWeights(items: Transaction[], memberIds: string[]): Map<string, number> {
-  const sum = (onlyFixed: boolean) => {
-    const income = new Map(memberIds.map((id) => [id, 0]));
-    for (const t of items) {
-      if (t.type !== 'einnahme' || !t.person_id || !income.has(t.person_id)) continue;
-      if (onlyFixed && t.source !== 'fixkosten') continue;
-      income.set(t.person_id, income.get(t.person_id)! + t.amount_cents);
-    }
-    return income;
-  };
-  let income = sum(true);
-  if ([...income.values()].every((v) => v === 0)) income = sum(false);
-  const total = [...income.values()].reduce((a, b) => a + b, 0);
-  return new Map(memberIds.map((id) => [id, total > 0 ? income.get(id)! / total : 1 / (memberIds.length || 1)]));
-}
-
-/**
- * Verfügbarer Betrag pro Person: eigene Einnahmen minus eigene Ausgaben,
- * gemeinsame Buchungen werden nach Einkommen aufgeteilt.
+ * Verfügbarer Betrag pro Person: eigene Einnahmen minus eigene Ausgaben. Dazu gehören
+ * die Überweisung aufs Gemeinschaftskonto, eigene Kosten und Sparraten. Gemeinsame
+ * Kosten zählen hier nicht, sie werden vom Gemeinschaftskonto bezahlt.
  */
 export function availablePerPerson(items: Transaction[], memberIds: string[]) {
   const result = new Map(memberIds.map((id) => [id, { income: 0, expense: 0 }]));
-  const weights = shareWeights(items, memberIds);
   for (const t of items) {
-    const own = t.person_id && result.has(t.person_id);
-    for (const id of own ? [t.person_id!] : memberIds) {
-      const share = own ? t.amount_cents : t.amount_cents * weights.get(id)!;
-      const r = result.get(id)!;
-      if (t.type === 'einnahme') r.income += share;
-      else r.expense += share;
-    }
+    const r = t.person_id ? result.get(t.person_id) : undefined;
+    if (!r) continue;
+    if (t.type === 'einnahme') r.income += t.amount_cents;
+    else r.expense += t.amount_cents;
   }
   return memberIds.map((id) => {
     const r = result.get(id)!;
-    return {
-      userId: id,
-      share: weights.get(id)!,
-      income: Math.round(r.income),
-      expense: Math.round(r.expense),
-      available: Math.round(r.income - r.expense),
-    };
+    return { userId: id, income: r.income, expense: r.expense, available: r.income - r.expense };
   });
+}
+
+/** Gemeinschaftskonto im Zeitraum: Überweisungen rein, gemeinsame Ausgaben raus. */
+export function sharedAccount(items: Transaction[], isTransfer: (categoryId: string) => boolean) {
+  let transfers = 0;
+  let costs = 0;
+  for (const t of items) {
+    if (t.type !== 'ausgabe') continue;
+    if (isTransfer(t.category_id)) transfers += t.amount_cents;
+    else if (!t.person_id) costs += t.amount_cents;
+  }
+  return { transfers, costs, buffer: transfers - costs };
 }

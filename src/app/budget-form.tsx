@@ -112,7 +112,7 @@ export default function BudgetForm() {
       <Segmented options={ownerOptions} value={owner} onChange={setOwner} />
       {owner === 'jeden' && <Muted>Jeder bekommt ein eigenes Budget mit diesem Betrag.</Muted>}
       <Muted>
-        Welche Kategorien zählen? {categoryIds.length === 0 ? 'Keine gewählt: alle Ausgaben zählen.' : `${categoryIds.length} gewählt.`}
+        Welche Kategorien zählen? {categoryIds.length === 0 ? 'Keine gewählt: alle Ausgaben außer Fixkosten und Sparraten zählen.' : `${categoryIds.length} gewählt.`}
       </Muted>
       <CategoryGrid categories={expenseCategories} selected={categoryIds} onSelect={toggle} />
       {error && <Body style={{ color: t.expense }}>{error}</Body>}

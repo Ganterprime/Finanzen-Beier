@@ -32,7 +32,7 @@ export default function Budgets() {
       </Card>
       <Muted>
         Budgets gelten pro Monat. In der Jahresansicht wird das Limit mal 12 gerechnet. Bei einem Budget für eine Person
-        zählen ihre eigenen Ausgaben und gemeinsame Ausgaben nach ihrem Einkommensanteil.
+        zählen nur ihre eigenen Ausgaben.
       </Muted>
     </Screen>
   );
