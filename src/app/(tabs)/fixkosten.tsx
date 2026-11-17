@@ -1,25 +1,19 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { MonthPlan } from '@/components/MonthPlan';
 import { Button, Card, Muted, Screen, Title } from '@/components/ui';
-import { FREQUENCY_LABEL, formatEuro, formatPercent, monthlyCents } from '@/lib/format';
+import { FREQUENCY_LABEL, formatEuro, monthlyCents } from '@/lib/format';
 import { useTheme } from '@/lib/theme';
 import type { FixedCost } from '@/lib/types';
 import { useFixedCosts } from '@/lib/useFixedCosts';
-import { TRANSFER_CATEGORY } from '@/lib/useTransactions';
+import { useBudgets } from '@/lib/useBudgets';
 import { useHousehold } from '@/providers/HouseholdProvider';
 
 export default function FixedCosts() {
-  const t = useTheme();
-  const { members, category } = useHousehold();
-  // Überweisungen aufs Gemeinschaftskonto bezahlen die gemeinsamen Kosten, nicht doppelt zählen
-  const isTransfer = (f: FixedCost) => category(f.category_id)?.name === TRANSFER_CATEGORY;
+  const { members } = useHousehold();
   const { items, loading } = useFixedCosts();
-  const active = items.filter((f) => f.active);
-  const monthly = (list: FixedCost[]) => list.reduce((s, f) => s + monthlyCents(f.amount_cents, f.frequency), 0);
-  const out = monthly(active.filter((f) => f.type === 'ausgabe' && !f.savings_goal_id && !isTransfer(f)));
-  const saving = monthly(active.filter((f) => f.type === 'ausgabe' && f.savings_goal_id));
-  const income = monthly(active.filter((f) => f.type === 'einnahme'));
+  const { budgets } = useBudgets();
 
   // Sparraten (zahlen auf ein Sparziel ein) getrennt von den Kosten zeigen
   const expenses = items.filter((f) => f.type === 'ausgabe' && !f.savings_goal_id);
@@ -29,25 +23,7 @@ export default function FixedCosts() {
 
   return (
     <Screen>
-      <Card>
-        <Muted>Fixkosten pro Monat</Muted>
-        <Text style={[styles.big, { color: t.expense }]}>{formatEuro(out)}</Text>
-        <View style={styles.split}>
-          <View style={{ flex: 1 }}>
-            <Muted>Feste Einnahmen</Muted>
-            <Text style={[styles.mid, { color: t.income }]}>{formatEuro(income)}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Muted>Fixkostenquote</Muted>
-            <Text style={[styles.mid, { color: t.text }]}>{income ? formatPercent(out / income) : '–'}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Muted>Frei verfügbar</Muted>
-            <Text style={[styles.mid, { color: t.text }]}>{income ? formatEuro(income - out - saving) : '–'}</Text>
-          </View>
-        </View>
-        {saving > 0 && <Muted>Sparraten: {formatEuro(saving)} pro Monat (bei „Frei verfügbar“ schon abgezogen).</Muted>}
-      </Card>
+      <MonthPlan fixedCosts={items} budgets={budgets} />
 
       <Button label="Fixkosten hinzufügen" onPress={() => router.push('/fixkosten-form')} />
 
@@ -118,9 +94,6 @@ function Section({ title, items, loading }: { title: string; items: FixedCost[];
 }
 
 const styles = StyleSheet.create({
-  big: { fontSize: 30, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  mid: { fontSize: 16, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  split: { flexDirection: 'row', gap: 10 },
   head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 },
 });
